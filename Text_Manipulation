@@ -1,0 +1,210 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class Text_Manipulation {
+
+    public static final String ANSI_RESET = "\u001B[0m";
+    public static final String ANSI_RED = "\u001B[31m";
+    public static final String ANSI_YELLOW = "\u001B[33m";
+
+    public static void main(String[] args) throws IOException {
+        Scanner scanner = new Scanner(System.in);
+
+        boolean upperCase = false;
+        int shiftSize = 0;
+        String color = "";
+
+        System.out.println("Please state your choice...");
+        System.out.println("UPPER case or lower case (U or L):");
+        String caseChoice = scanner.nextLine().toUpperCase();
+        if (caseChoice.equals("U")) {
+            upperCase = true;
+        } else if (!caseChoice.equals("L")) {
+            System.out.println("Invalid Choice please enter (U or L)");
+            return;
+        }
+
+        System.out.println("Please state your choice...");
+        System.out.println("How many characters to shift (number between 1-3):");
+        shiftSize = scanner.nextInt();
+        if (shiftSize < 1 || shiftSize > 3) {
+            System.out.println("Invalid Choice please enter a number between (1-3)");
+            return;
+        }
+
+        System.out.println("Please state your choice...");
+        System.out.println("Color of characters (R or Y):");
+        color = scanner.next().toUpperCase();
+        if (!color.equals("R") && !color.equals("Y")) {
+            System.out.println("Invalid Choice please enter (R or Y)");
+            return;
+        }
+
+        FileReader fr = new FileReader("13079745.txt");
+        BufferedReader br = new BufferedReader(fr);
+
+        HashMap<Integer, ArrayList<String>> map = new HashMap<>();
+        ArrayList<String> original = new ArrayList<>();
+        ArrayList<String> upper = new ArrayList<>();
+        ArrayList<String> schwifty = new ArrayList<>();
+        ArrayList<String> colorful = new ArrayList<>();
+
+
+        int charCode;
+        int i = 1;
+
+
+        while ((charCode = br.read()) != -1) {
+            char character = (char) charCode;
+            if (Character.isLetter(character)) {
+
+                //ArrayList<String> myList = map.getOrDefault(i, new ArrayList<>());
+                String s = String.valueOf(character);
+
+
+                original.add(s);
+
+                i++;
+            }
+
+            /*  myList.add(s);
+                myList.add(modifiedChar);
+                map.put(i, myList); */
+        }
+
+        Thread t1up = new caseThread(original,upperCase,upper);
+        t1up.run();
+        System.out.println(upper);
+
+        Thread t2shift = new shiftThread(original,shiftSize,schwifty);
+        t2shift.run();
+        System.out.println(schwifty);
+
+        Thread t3color = new colorThread(original,color,colorful);
+        t3color.run();
+        System.out.println(colorful);
+
+
+
+        br.close();
+
+        System.out.println(map);
+        System.out.println("Original: " + original);
+        //System.out.println("Modified: " + modified);
+
+        StringBuilder coloredText = new StringBuilder();
+        for (String character : original) {
+            coloredText.append(character);
+        }
+
+        if (color.equals("Y")) {
+            coloredText.insert(0, ANSI_YELLOW);
+            coloredText.append(ANSI_RESET);
+        } else if (color.equals("R")) {
+            coloredText.insert(0, ANSI_RED);
+            coloredText.append(ANSI_RESET);
+        }
+
+        System.out.println(coloredText.toString());
+    }
+
+    static class caseThread extends Thread {
+
+
+        public boolean ReceivedCaseChoice;
+        public ArrayList<String> ReceivedArrayList;
+        public ArrayList<String> ChangedArrayList;
+
+        public caseThread(ArrayList s, boolean tCaseChoice, ArrayList e) {
+            this.ReceivedArrayList = s;
+            this.ReceivedCaseChoice= tCaseChoice;
+            this.ChangedArrayList= e;
+        }
+
+        @Override
+        public void run() {
+
+
+            if (ReceivedCaseChoice == true){
+                for (String str : ReceivedArrayList) {
+                    ChangedArrayList.add(str.toUpperCase());
+
+                }
+            }
+            else{
+                for (String str : ReceivedArrayList) {
+                    ChangedArrayList.add(str.toLowerCase());
+                }
+            }
+
+        }
+
+    }
+
+    static class shiftThread extends Thread {
+
+
+        public int ReceivedShiftNumber;
+        public ArrayList<String> ReceivedArrayList;
+        public ArrayList<String> ChangedArrayList;
+
+        public shiftThread(ArrayList s, int tShiftNumber, ArrayList e) {
+            this.ReceivedArrayList = s;
+            this.ReceivedShiftNumber= tShiftNumber;
+            this.ChangedArrayList= e;
+        }
+
+        @Override
+        public void run() {
+
+
+
+            for (int i = 0; i < ReceivedArrayList.size(); i++) {
+                String letter = ReceivedArrayList.get(i);
+                char newLetter = (char) (letter.charAt(0) + ReceivedShiftNumber);
+                ChangedArrayList.add(i, String.valueOf(newLetter));
+
+            }
+
+
+
+        }
+
+    }
+
+    static class colorThread extends Thread {
+
+
+        public String ReceivedColor;
+        public ArrayList<String> ReceivedArrayList;
+        public ArrayList<String> ChangedArrayList;
+
+        public colorThread(ArrayList s, String tcolor, ArrayList e) {
+            this.ReceivedArrayList = s;
+            this.ReceivedColor= tcolor;
+            this.ChangedArrayList= e;
+        }
+
+        @Override
+        public void run() {
+            if (ReceivedColor == "Y") {
+                for (String s : ReceivedArrayList) {
+                    ChangedArrayList.add("\u001B[33m"+s+"\\u001B[0m\"");
+                }
+            }
+
+            else if(ReceivedColor == "R"){
+                for (String s : ReceivedArrayList) {
+                    ChangedArrayList.add("\u001B[31m"+s+"\\u001B[0m\"");
+                }
+            }
+
+
+        }
+
+    }
+}
